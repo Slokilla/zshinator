@@ -1,0 +1,60 @@
+#! /usr/bin/bash
+
+echo 'Everything is gonna take place in ~ folder'
+cd ~
+
+echo "Installing useful utilitaries"
+sudo apt install git fontconfig unzip
+echo "Dependencies installed !"
+
+echo "Installing zsh"
+sudo apt install zsh
+echo "Zsh installed"
+
+echo "Installing Oh My Zsh"
+sh -c "$(curl -fsSL https://raw.github.com/robbyrussell/oh-my-zsh/master/tools/install.sh)"
+echo "Oh My Zsh installed"
+
+echo "To display some character, p10k needs you to use a nerd font in your terminal." 
+echo "Only the displaying terminal must have this font set. If you're running this script on remote shell, don't install fonts."
+read -p "Do you want to install Meslo Nerd font ? (yes/no)" answer
+if [ "$answer" != "${answer#[Yy]}" ]; then
+    wget https://github.com/ryanoasis/nerd-fonts/releases/download/v2.1.0/Meslo.zip
+    mkdir -p .local/share/fonts
+    unzip Meslo.zip -d .local/share/fonts
+    cd .local/share/fonts
+    rm *Windows*
+    cd ~
+    rm Meslo.zip
+    fc-cache -fv
+    echo "Meslo Nerd font installed !"
+else
+    echo "Skipping font installation. Don't forget to install the font on your final terminal :)"
+fi
+
+echo "Installing PowerLevel10k"
+
+mkdir -p $HOME/.oh-my-zsh/custom/themes/powerlevel10k
+git clone https://github.com/romkatv/powerlevel10k.git $HOME/.oh-my-zsh/custom/themes/powerlevel10k
+
+echo "Setting p10k as default zsh theme"
+sed -i 's@ZSH_THEME=.*@ZSH_THEME=\"powerlevel10k/powerlevel10k\"@' .zshrc
+
+echo "PowerLevel10k is now installed and configured"
+
+echo "Installing zsh plugins"
+git clone https://github.com/zsh-users/zsh-syntax-highlighting.git $HOME/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting
+git clone https://github.com/zsh-users/zsh-autosuggestions $HOME/.oh-my-zsh/custom/plugins/zsh-autosuggestions
+
+echo "Enabling zsh plugins"
+sed -i 's@plugins=(.*@plugins=( git zsh-syntax-highlighting zsh-autosuggestions )@' .zshrc
+
+echo "Installing Exa and aliasing ls" 
+sudo apt install exa
+echo 'alias ls="exa"' >> .zshrc
+echo 'alias la="exa --long --all --group"' >> .zshrc
+
+echo "Setup is done ! To take effect, you need to restart all terminal sessions or sourcing .zshrc"
+echo "Sourcing .zshrc for this session..." 
+zsh -c "source .zshrc; p10k configure"
+zsh -i
